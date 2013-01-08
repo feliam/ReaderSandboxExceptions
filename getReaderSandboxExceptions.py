@@ -1,3 +1,4 @@
+''' http://blog.binamuse.com/2013/01/uncover-adobe-reader-x-sandbox.html '''
 from winappdbg import Debug, Process, version
 import sys, hashlib, struct
 
@@ -209,8 +210,7 @@ def print_policy(event):
     value = process.read(value_p, 2)
     while value[-2:] != '\x00\x00':
         value += process.read(value_p+len(value),2)
-    value = value.decode('utf-16')
-    print "Rule: %d, %d, %s\n"%(subsystem,semantic,value)
+    value = value[:-2].decode('utf-16')
 
     #Try to handle wildcards (FIX!)
     if value.startswith("\\??\\pipe\\"):
@@ -218,9 +218,13 @@ def print_policy(event):
     if '?' in value:
         value = value.split('?')[0]
     if value.endswith('*'):
-        value = value.split('*')[0]
+        value = value[:-1]
     if value.startswith('*'):
-        value = value.split('*')[-1]
+        value = value[1:]
+    if value == '':
+        return
+
+    print "Rule: %d, %d, %s"%(subsystem,semantic,value)
 
     if subsystem == 0:
         #Files
