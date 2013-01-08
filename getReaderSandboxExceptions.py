@@ -1,6 +1,6 @@
 ''' http://blog.binamuse.com/2013/01/uncover-adobe-reader-x-sandbox.html '''
 from winappdbg import Debug, Process, version
-import sys, hashlib, struct
+import sys, os, hashlib, struct
 
 class PMF(object):
     autocommit = False
@@ -156,7 +156,7 @@ subsystems = [
   
 ]
 semantics = {}
-semantics['10.1.4']=semantics['10.1.3']=[
+semantics['10.1.5']=semantics['10.1.4']=semantics['10.1.3']=[
     'FILES_ALLOW_ANY',       # Allows open or create for any kind of access
                              # that the file system supports.
     'FILES_ALLOW_READONLY',  # Allows open or create with read access only.
@@ -174,7 +174,7 @@ semantics['10.1.4']=semantics['10.1.3']=[
     'REG_ALLOW_ANY',
 ]
 
-semantics['11.0.0']=[
+semantics['11.0.0']=semantics['11.0.1']=[
     'FILES_ALLOW_ANY',       # Allows open or create for any kind of access
                              # that the file system supports.
     'FILES_ALLOW_READONLY',  # Allows open or create with read access only.
@@ -277,16 +277,18 @@ if __name__ == '__main__':
     #Read Adobe Reader Executable file and determine the version using hardcoded hashes
     versions = { '84b3c0476d17c9a44db4c9256a7e2844': '10.1.3', 
                  'c1648084c395152fbfa1b333d92056bc': '10.1.4',
-                 'ca0c67ba7aeba6aed5ddb852e6eea811': '11.0.0' }
+                 '5aa4df6cd3c96086955064bec1cd0c9b': '10.1.5',
+                 'ca0c67ba7aeba6aed5ddb852e6eea811': '11.0.0',
+                 '4cb25d0504423d7bccb9c547e253a67f': '11.0.1', }
 
-    plat = ''
-    if sys.platform != 'win32':
-        plat = ' (x86)'
+    program_files = r"C:\Program Files"
+    if os.path.exists(r"C:\Program Files (x86)"):
+        program_files = r"C:\Program Files (x86)"
     try:
-        path = r"C:\Program Files%s\Adobe\Reader 11.0\Reader\AcroRd32.exe"%plat
+        path = program_files+r"\Adobe\Reader 11.0\Reader\AcroRd32.exe"
         version = versions[hashlib.md5(file(path,"rb").read()).hexdigest()]  #raise if version not supported
     except:
-        path = r"C:\Program Files%s\Adobe\Reader 10.0\Reader\AcroRd32.exe"%plat
+        path = program_files+r"\Adobe\Reader 10.0\Reader\AcroRd32.exe"
         version = versions[hashlib.md5(file(path,"rb").read()).hexdigest()]  #raise if version not supported
 
     print "Adobe Reader X %s"%version
@@ -316,7 +318,9 @@ if __name__ == '__main__':
                 # the function that adds a new policy
                 breakpoint_offsets = { "10.1.3": 0x21260,
                                        "10.1.4": 0x21630,
-                                       "11.0.0": 0x20370 }
+                                       "10.1.5": 0x1fca0,
+                                       "11.0.0": 0x20370,
+                                       "11.0.1": 0x18350, }
                 breakpoint_address = base_address + breakpoint_offsets[version]
 
                 #setting breakpoint
